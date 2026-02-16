@@ -8,14 +8,14 @@ class BlackScholes:
             time_to_maturity: float,
             strike: float,
             current_price: float,
-            volatitly: float,
+            volatility: float,
             interest_rate: float,
     ):
         
         self.time_to_maturity = time_to_maturity
         self.strike = strike
         self.current_price = current_price
-        self.volatility = volatitly
+        self.volatility = volatility
         self.interest_rate = interest_rate
 
     def  run(
@@ -54,6 +54,59 @@ class BlackScholes:
         self.put_price = put_price
 
         #THE GREEKS
+
+        #delta
+        self.call_delta = norm.cdf(d_pos)
+        self.put_delta = norm.cdf(d_pos) - 1
+
+        #gamma
+        self.call_gamma = norm.pdf(d_pos) / (
+            current_price * volatility * sqrt(time_to_maturity)
+        )
+        self.put_gamma = self.call_gamma
+
+        #vega
+        self.call_vega = current_price * norm.pdf(d_pos) * sqrt(time_to_maturity)
+        self.put_vega = self.call_vega
+
+        #theta
+        self.call_theta = (
+            (-1 * strike * norm.pdf(d_pos) * volatility) / (
+                2 * sqrt(time_to_maturity)
+            )
+        ) - (
+            interest_rate * strike * exp(-1 * interest_rate * time_to_maturity) * norm.cdf(d_neg)
+        )
+        self.put_theta = (
+            (-1 * strike * norm.pdf(d_pos) * volatility) / (
+                2 * sqrt(time_to_maturity)
+            )
+        ) + (
+            interest_rate * strike * exp(-1 * interest_rate * time_to_maturity) * norm.cdf(-d_neg)
+        )
+
+
+
+
+        #rho
+
+
         
+if __name__ == "__main__":
+    time_to_maturity = 2
+    strike = 90
+    current_price = 100
+    volatility = 0.2
+    interest_rate = 0.05
+
+    #Black Scholes
+
+    BS = BlackScholes(
+            time_to_maturity = time_to_maturity,
+            strike = strike,
+            current_price = current_price,
+            volatility = volatility,
+            interest_rate = interest_rate)
+    BS.run()
 
 
