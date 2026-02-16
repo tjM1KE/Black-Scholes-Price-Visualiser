@@ -55,41 +55,37 @@ class BlackScholes:
 
         #THE GREEKS
 
-        #delta
+        #DELTA
         self.call_delta = norm.cdf(d_pos)
         self.put_delta = norm.cdf(d_pos) - 1
 
-        #gamma
+        #GAMMA
         self.call_gamma = norm.pdf(d_pos) / (
             current_price * volatility * sqrt(time_to_maturity)
         )
         self.put_gamma = self.call_gamma
 
-        #vega
+        #VEGA
         self.call_vega = current_price * norm.pdf(d_pos) * sqrt(time_to_maturity)
         self.put_vega = self.call_vega
 
-        #theta
+        #THETA
         self.call_theta = (
-            (-1 * strike * norm.pdf(d_pos) * volatility) / (
-                2 * sqrt(time_to_maturity)
-            )
+            (-1 * strike * norm.cdf(d_pos) * volatility) / (2 * sqrt(time_to_maturity))
         ) - (
-            interest_rate * strike * exp(-1 * interest_rate * time_to_maturity) * norm.cdf(d_neg)
+            interest_rate * strike * exp(-(interest_rate * time_to_maturity)) * norm.cdf(d_neg)
         )
         self.put_theta = (
-            (-1 * strike * norm.pdf(d_pos) * volatility) / (
+            (-1 * strike * norm.cdf(d_pos) * volatility) / (
                 2 * sqrt(time_to_maturity)
             )
         ) + (
             interest_rate * strike * exp(-1 * interest_rate * time_to_maturity) * norm.cdf(-d_neg)
         )
 
-
-
-
-        #rho
-
+        #RHO
+        self.call_rho = strike * time_to_maturity * exp(-(interest_rate * time_to_maturity))*norm.cdf(d_neg)
+        self.put_rho = -(strike * time_to_maturity * exp(-(interest_rate * time_to_maturity)) * norm.cdf(-d_neg))
 
         
 if __name__ == "__main__":
