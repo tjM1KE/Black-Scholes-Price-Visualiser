@@ -211,14 +211,14 @@ def plot_heatmap(bs_model, spot_range, vol_range, strike):
 
     # Plotting Call Price Heatmap
     fig_call, ax_call = plt.subplots(figsize=(10, 8))
-    sns.heatmap(call_pnls, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_call)
+    sns.heatmap(call_pnls, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn",center = 0, ax=ax_call)
     ax_call.set_title('CALL')
     ax_call.set_xlabel('Spot Price')
     ax_call.set_ylabel('Volatility')
     
     # Plotting Put Price Heatmap
     fig_put, ax_put = plt.subplots(figsize=(10, 8))
-    sns.heatmap(put_pnls, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_put)
+    sns.heatmap(put_pnls, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn",center = 0, ax=ax_put)
     ax_put.set_title('PUT')
     ax_put.set_xlabel('Spot Price')
     ax_put.set_ylabel('Volatility')
@@ -252,21 +252,21 @@ st.subheader("Call Greeks")
 
 c1, c2, c3, c4, c5 = st.columns(5)
 
-c1.metric("Delta", f"{bs_model.call_delta:.4f}")
-c2.metric("Gamma", f"{bs_model.call_gamma:.4f}")
-c3.metric("Theta", f"{bs_model.call_theta:.4f}")
-c4.metric("Vega", f"{bs_model.call_vega:.4f}")
-c5.metric("Rho", f"{bs_model.call_rho:.4f}")
+c1.metric("Delta Δ", f"{bs_model.call_delta:.4f}")
+c2.metric("Gamma Γ", f"{bs_model.call_gamma:.4f}")
+c3.metric("Theta Θ", f"{bs_model.call_theta:.4f}")
+c4.metric("Vega ν", f"{bs_model.call_vega:.4f}")
+c5.metric("Rho ρ", f"{bs_model.call_rho:.4f}")
 
 st.subheader("Put Greeks")
 
 p1, p2, p3, p4, p5 = st.columns(5)
 
-p1.metric("Delta", f"{bs_model.put_delta:.4f}")
-p2.metric("Gamma", f"{bs_model.put_gamma:.4f}")
-p3.metric("Theta", f"{bs_model.put_theta:.4f}")
-p4.metric("Vega", f"{bs_model.put_vega:.4f}")
-p5.metric("Rho", f"{bs_model.put_rho:.4f}")
+p1.metric("Delta Δ", f"{bs_model.put_delta:.4f}")
+p2.metric("Gamma Γ", f"{bs_model.put_gamma:.4f}")
+p3.metric("Theta Θ", f"{bs_model.put_theta:.4f}")
+p4.metric("Vega ν", f"{bs_model.put_vega:.4f}")
+p5.metric("Rho ρ", f"{bs_model.put_rho:.4f}")
 
 # Display Call and Put Values in colored tables
 col1, col2, col3, col4= st.columns(4)
@@ -285,7 +285,7 @@ with col1:
 with col2:
     # Using the custom class for PUT value
     st.markdown(f"""
-        <div class="metric-container metric-put">
+        <div class="metric-container metric-call">
             <div>
                 <div class="metric-label">CALL P&L</div>
                 <div class="metric-value">${call_pnl:.2f}</div>
@@ -315,18 +315,18 @@ with col4:
 
 st.markdown("")
 st.title("Options P&L - Interactive Heatmap")
-st.info("Explore how option profit and losses fluctuate with varying 'Spot Prices and Volatility' levels using interactive heatmap parameters, all while maintaining a constant 'Strike Price' and 'Current Option Price'.")
+st.info("Explore how option profit and losses fluctuate with varying 'Spot Prices and Volatility' levels using interactive heatmap parameters, all while maintaining a constant 'Strike Price' and 'Current Option Price'. Greeks measure how option prices respond to changes in market variables such as price, volatility, time and interest rates.")
 
 # Interactive Sliders and Heatmaps for Call and Put Options
 col1, col2 = st.columns([1,1], gap="small")
 
 with col1:
-    st.subheader("Call Price Heatmap")
+    st.subheader("Call P&L Heatmap")
     heatmap_fig_call, _ = plot_heatmap(bs_model, spot_range, vol_range, strike)
     st.pyplot(heatmap_fig_call)
 
 with col2:
-    st.subheader("Put Price Heatmap")
+    st.subheader("Put P&L Heatmap")
     _, heatmap_fig_put = plot_heatmap(bs_model, spot_range, vol_range, strike)
     st.pyplot(heatmap_fig_put)
 
