@@ -245,29 +245,6 @@ st.table(input_df)
 bs_model = BlackScholes(time_to_maturity, strike, current_price, volatility, interest_rate, t0_option_price)
 call_price, put_price, call_pnl, put_pnl = bs_model.calculate_prices()
 
-#Greeks Dashboard
-st.title("Option Greeks Dashboard")
-
-st.subheader("Call Greeks")
-
-c1, c2, c3, c4, c5 = st.columns(5)
-
-c1.metric("Delta Δ", f"{bs_model.call_delta:.4f}")
-c2.metric("Gamma Γ", f"{bs_model.call_gamma:.4f}")
-c3.metric("Theta Θ", f"{bs_model.call_theta:.4f}")
-c4.metric("Vega ν", f"{bs_model.call_vega:.4f}")
-c5.metric("Rho ρ", f"{bs_model.call_rho:.4f}")
-
-st.subheader("Put Greeks")
-
-p1, p2, p3, p4, p5 = st.columns(5)
-
-p1.metric("Delta Δ", f"{bs_model.put_delta:.4f}")
-p2.metric("Gamma Γ", f"{bs_model.put_gamma:.4f}")
-p3.metric("Theta Θ", f"{bs_model.put_theta:.4f}")
-p4.metric("Vega ν", f"{bs_model.put_vega:.4f}")
-p5.metric("Rho ρ", f"{bs_model.put_rho:.4f}")
-
 # Display Call and Put Values in colored tables
 col1, col2, col3, col4= st.columns(4)
 
@@ -330,5 +307,27 @@ with col2:
     _, heatmap_fig_put = plot_heatmap(bs_model, spot_range, vol_range, strike)
     st.pyplot(heatmap_fig_put)
 
+#Greeks Dashboard
+st.title("Option Greeks Dashboard")
+
+st.subheader("Call Greeks")
+
+c1, c2, c3, c4, c5 = st.columns(5)
+
+c1.metric("Delta Δ", f"{bs_model.call_delta:.4f}")
+c2.metric("Gamma Γ", f"{bs_model.call_gamma:.4f}")
+c3.metric("Theta Θ", f"{bs_model.call_theta:.4f}")
+c4.metric("Vega ν", f"{bs_model.call_vega:.4f}")
+c5.metric("Rho ρ", f"{bs_model.call_rho:.4f}")
+
+st.subheader("Put Greeks")
+
+p1, p2, p3, p4, p5 = st.columns(5)
+
+p1.metric("Delta Δ", f"{bs_model.put_delta:.4f}")
+p2.metric("Gamma Γ", f"{bs_model.put_gamma:.4f}")
+p3.metric("Theta Θ", f"{bs_model.put_theta:.4f}")
+p4.metric("Vega ν", f"{bs_model.put_vega:.4f}")
+p5.metric("Rho ρ", f"{bs_model.put_rho:.4f}")
 
 
