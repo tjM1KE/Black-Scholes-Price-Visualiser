@@ -146,17 +146,14 @@ class BlackScholes:
 
         #THETA
         self.call_theta = (
-            (-1 * strike * norm.cdf(d_pos) * volatility) / (2 * sqrt(time_to_maturity))
-        ) - (
-            interest_rate * strike * exp(-(interest_rate * time_to_maturity)) * norm.cdf(d_neg)
-        )
-        self.put_theta = (
-            (-1 * strike * norm.cdf(d_pos) * volatility) / (
-                2 * sqrt(time_to_maturity)
+            -(current_price * norm.pdf(d_pos) * volatility) / (2 * sqrt(time_to_maturity))
+            - interest_rate * strike * exp(-interest_rate * time_to_maturity) * norm.cdf(d_neg)
             )
-        ) + (
-            interest_rate * strike * exp(-1 * interest_rate * time_to_maturity) * norm.cdf(-d_neg)
-        )
+        
+        self.put_theta = (
+            -(current_price * norm.pdf(d_pos) * volatility) / (2 * sqrt(time_to_maturity)) 
+            + interest_rate * strike * exp(-interest_rate * time_to_maturity) * norm.cdf(-d_neg)
+            )
 
         #RHO
         self.call_rho = strike * time_to_maturity * exp(-(interest_rate * time_to_maturity))*norm.cdf(d_neg)
@@ -211,7 +208,7 @@ def plot_heatmap(bs_model, spot_range, vol_range, strike):
             bs_temp.calculate_prices()
             call_pnls[i, j] = bs_temp.call_pnl
             put_pnls[i, j] = bs_temp.put_pnl
-    
+
     # Plotting Call Price Heatmap
     fig_call, ax_call = plt.subplots(figsize=(10, 8))
     sns.heatmap(call_pnls, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_call)
@@ -246,12 +243,33 @@ st.table(input_df)
 
 # Calculate Call and Put values
 bs_model = BlackScholes(time_to_maturity, strike, current_price, volatility, interest_rate, t0_option_price)
-call_price, put_price = bs_model.calculate_prices()
-call_pnl , put_pnl = bs_model.calculate_prices()
+call_price, put_price, call_pnl, put_pnl = bs_model.calculate_prices()
 
+#Greeks Dashboard
+st.title("Option Greeks Dashboard")
+
+st.subheader("Call Greeks")
+
+c1, c2, c3, c4, c5 = st.columns(5)
+
+c1.metric("Delta", f"{bs_model.call_delta:.4f}")
+c2.metric("Gamma", f"{bs_model.call_gamma:.4f}")
+c3.metric("Theta", f"{bs_model.call_theta:.4f}")
+c4.metric("Vega", f"{bs_model.call_vega:.4f}")
+c5.metric("Rho", f"{bs_model.call_rho:.4f}")
+
+st.subheader("Put Greeks")
+
+p1, p2, p3, p4, p5 = st.columns(5)
+
+p1.metric("Delta", f"{bs_model.put_delta:.4f}")
+p2.metric("Gamma", f"{bs_model.put_gamma:.4f}")
+p3.metric("Theta", f"{bs_model.put_theta:.4f}")
+p4.metric("Vega", f"{bs_model.put_vega:.4f}")
+p5.metric("Rho", f"{bs_model.put_rho:.4f}")
 
 # Display Call and Put Values in colored tables
-col1, col2, col3, col4= st.columns([1,1], gap="small")
+col1, col2, col3, col4= st.columns(4)
 
 with col1:
     # Using the custom class for CALL value
@@ -274,7 +292,7 @@ with col2:
             </div>
         </div>
     """, unsafe_allow_html=True)
-with col4:
+with col3:
     # Using the custom class for PUT value
     st.markdown(f"""
         <div class="metric-container metric-put">
