@@ -10,6 +10,7 @@ class BlackScholes:
             current_price: float,
             volatility: float,
             interest_rate: float,
+            t0_option_price: float,
     ):
         
         self.time_to_maturity = time_to_maturity
@@ -17,6 +18,7 @@ class BlackScholes:
         self.current_price = current_price
         self.volatility = volatility
         self.interest_rate = interest_rate
+        self.t0_option_price = t0_option_price
 
     def  run(
             self,
@@ -26,8 +28,9 @@ class BlackScholes:
         current_price = self.current_price
         volatility = self.volatility
         interest_rate = self.interest_rate
+        t0_option_price = self.t0_option_price
 
-
+        #d1
         d_pos = (
             (
                 1/(volatility * sqrt(time_to_maturity))
@@ -36,6 +39,7 @@ class BlackScholes:
         )
         )
 
+        #d2
         d_neg = (
             d_pos - (sqrt(time_to_maturity) * volatility)
         )
@@ -52,6 +56,19 @@ class BlackScholes:
 
         self.call_price = call_price
         self.put_price = put_price
+
+        #PROFIT AND LOSS
+
+        call_pnl =(
+            t0_option_price - call_price
+        )
+
+        put_pnl = (
+            put_price - t0_option_price
+        )
+
+        self.call_pnl = call_pnl
+        self.put_pnl = put_pnl
 
         #THE GREEKS
 
@@ -87,6 +104,9 @@ class BlackScholes:
         self.call_rho = strike * time_to_maturity * exp(-(interest_rate * time_to_maturity))*norm.cdf(d_neg)
         self.put_rho = -(strike * time_to_maturity * exp(-(interest_rate * time_to_maturity)) * norm.cdf(-d_neg))
 
+
+
+
         
 if __name__ == "__main__":
     time_to_maturity = 2
@@ -94,6 +114,7 @@ if __name__ == "__main__":
     current_price = 100
     volatility = 0.2
     interest_rate = 0.05
+    t0_option_price =  8 
 
     #Black Scholes
 
@@ -102,7 +123,8 @@ if __name__ == "__main__":
             strike = strike,
             current_price = current_price,
             volatility = volatility,
-            interest_rate = interest_rate)
+            interest_rate = interest_rate,
+            t0_option_price = t0_option_price)
     BS.run()
 
 

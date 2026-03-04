@@ -69,12 +69,14 @@ class BlackScholes:
         current_price: float,
         volatility: float,
         interest_rate: float,
+        t0_option_price: float,
     ):
         self.time_to_maturity = time_to_maturity
         self.strike = strike
         self.current_price = current_price
         self.volatility = volatility
         self.interest_rate = interest_rate
+        self.t0_option_price = t0_option_price
 
     def calculate_prices(
         self,
@@ -84,37 +86,83 @@ class BlackScholes:
         current_price = self.current_price
         volatility = self.volatility
         interest_rate = self.interest_rate
+        t0_option_price = self.t0_option_price
 
-        d1 = (
-            log(current_price / strike) +
-            (interest_rate + 0.5 * volatility ** 2) * time_to_maturity
-            ) / (
-                volatility * sqrt(time_to_maturity)
-            )
-        d2 = d1 - volatility * sqrt(time_to_maturity)
-
-        call_price = current_price * norm.cdf(d1) - (
-            strike * exp(-(interest_rate * time_to_maturity)) * norm.cdf(d2)
+        d_pos = (
+            (
+                1/(volatility * sqrt(time_to_maturity))
+        )*(
+            log(current_price / strike) + (interest_rate + (0.5 * volatility ** 2)) * time_to_maturity
         )
+        )
+
+        #d2
+        d_neg = (
+            d_pos - (sqrt(time_to_maturity) * volatility)
+        )
+
+        call_price = (
+            current_price * norm.cdf(d_pos) - (
+                strike * exp(-(interest_rate * time_to_maturity)) * norm.cdf(d_neg)
+            )
+        )
+
         put_price = (
-            strike * exp(-(interest_rate * time_to_maturity)) * norm.cdf(-d2)
-        ) - current_price * norm.cdf(-d1)
+            strike * exp(-(interest_rate * time_to_maturity)) * norm.cdf(-d_neg)
+        )- current_price * norm.cdf( -d_pos)
 
         self.call_price = call_price
         self.put_price = put_price
 
-        # GREEKS
-        # Delta
-        self.call_delta = norm.cdf(d1)
-        self.put_delta = 1 - norm.cdf(d1)
+        #PROFIT AND LOSS
 
-        # Gamma
-        self.call_gamma = norm.pdf(d1) / (
-            strike * volatility * sqrt(time_to_maturity)
+        call_pnl =(
+            t0_option_price - call_price
+        )
+
+        put_pnl = (
+            put_price - t0_option_price
+        )
+
+        self.call_pnl = call_pnl
+        self.put_pnl = put_pnl
+
+
+        #THE GREEKS
+
+        #DELTA
+        self.call_delta = norm.cdf(d_pos)
+        self.put_delta = norm.cdf(d_pos) - 1
+
+        #GAMMA
+        self.call_gamma = norm.pdf(d_pos) / (
+            current_price * volatility * sqrt(time_to_maturity)
         )
         self.put_gamma = self.call_gamma
 
-        return call_price, put_price
+        #VEGA
+        self.call_vega = current_price * norm.pdf(d_pos) * sqrt(time_to_maturity)
+        self.put_vega = self.call_vega
+
+        #THETA
+        self.call_theta = (
+            (-1 * strike * norm.cdf(d_pos) * volatility) / (2 * sqrt(time_to_maturity))
+        ) - (
+            interest_rate * strike * exp(-(interest_rate * time_to_maturity)) * norm.cdf(d_neg)
+        )
+        self.put_theta = (
+            (-1 * strike * norm.cdf(d_pos) * volatility) / (
+                2 * sqrt(time_to_maturity)
+            )
+        ) + (
+            interest_rate * strike * exp(-1 * interest_rate * time_to_maturity) * norm.cdf(-d_neg)
+        )
+
+        #RHO
+        self.call_rho = strike * time_to_maturity * exp(-(interest_rate * time_to_maturity))*norm.cdf(d_neg)
+        self.put_rho = -(strike * time_to_maturity * exp(-(interest_rate * time_to_maturity)) * norm.cdf(-d_neg))
+
+        return call_price, put_price, call_pnl, put_pnl
 
 # Function to generate heatmaps
 # ... your existing imports and BlackScholes class definition ...
@@ -132,6 +180,7 @@ with st.sidebar:
     time_to_maturity = st.number_input("Time to Maturity (Years)", value=1.0)
     volatility = st.number_input("Volatility (σ)", value=0.2)
     interest_rate = st.number_input("Risk-Free Interest Rate", value=0.05)
+    t0_option_price = st.number_input("Current Option Price", value= 8)
 
     st.markdown("---")
     calculate_btn = st.button('Heatmap Parameters')
@@ -146,8 +195,8 @@ with st.sidebar:
 
 
 def plot_heatmap(bs_model, spot_range, vol_range, strike):
-    call_prices = np.zeros((len(vol_range), len(spot_range)))
-    put_prices = np.zeros((len(vol_range), len(spot_range)))
+    call_pnls = np.zeros((len(vol_range), len(spot_range)))
+    put_pnls = np.zeros((len(vol_range), len(spot_range)))
     
     for i, vol in enumerate(vol_range):
         for j, spot in enumerate(spot_range):
@@ -156,22 +205,23 @@ def plot_heatmap(bs_model, spot_range, vol_range, strike):
                 strike=strike,
                 current_price=spot,
                 volatility=vol,
-                interest_rate=bs_model.interest_rate
+                interest_rate=bs_model.interest_rate,
+                t0_option_price = t0_option_price
             )
             bs_temp.calculate_prices()
-            call_prices[i, j] = bs_temp.call_price
-            put_prices[i, j] = bs_temp.put_price
+            call_pnls[i, j] = bs_temp.call_pnl
+            put_pnls[i, j] = bs_temp.put_pnl
     
     # Plotting Call Price Heatmap
     fig_call, ax_call = plt.subplots(figsize=(10, 8))
-    sns.heatmap(call_prices, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="viridis", ax=ax_call)
+    sns.heatmap(call_pnls, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_call)
     ax_call.set_title('CALL')
     ax_call.set_xlabel('Spot Price')
     ax_call.set_ylabel('Volatility')
     
     # Plotting Put Price Heatmap
     fig_put, ax_put = plt.subplots(figsize=(10, 8))
-    sns.heatmap(put_prices, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="viridis", ax=ax_put)
+    sns.heatmap(put_pnls, xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range, 2), annot=True, fmt=".2f", cmap="RdYlGn", ax=ax_put)
     ax_put.set_title('PUT')
     ax_put.set_xlabel('Spot Price')
     ax_put.set_ylabel('Volatility')
@@ -189,16 +239,19 @@ input_data = {
     "Time to Maturity (Years)": [time_to_maturity],
     "Volatility (σ)": [volatility],
     "Risk-Free Interest Rate": [interest_rate],
+    "Current Option Price": [t0_option_price],
 }
 input_df = pd.DataFrame(input_data)
 st.table(input_df)
 
 # Calculate Call and Put values
-bs_model = BlackScholes(time_to_maturity, strike, current_price, volatility, interest_rate)
+bs_model = BlackScholes(time_to_maturity, strike, current_price, volatility, interest_rate, t0_option_price)
 call_price, put_price = bs_model.calculate_prices()
+call_pnl , put_pnl = bs_model.calculate_prices()
+
 
 # Display Call and Put Values in colored tables
-col1, col2 = st.columns([1,1], gap="small")
+col1, col2, col3, col4= st.columns([1,1], gap="small")
 
 with col1:
     # Using the custom class for CALL value
@@ -216,15 +269,35 @@ with col2:
     st.markdown(f"""
         <div class="metric-container metric-put">
             <div>
+                <div class="metric-label">CALL P&L</div>
+                <div class="metric-value">${call_pnl:.2f}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+with col4:
+    # Using the custom class for PUT value
+    st.markdown(f"""
+        <div class="metric-container metric-put">
+            <div>
                 <div class="metric-label">PUT Value</div>
                 <div class="metric-value">${put_price:.2f}</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
+with col4:
+    # Using the custom class for PUT value
+    st.markdown(f"""
+        <div class="metric-container metric-put">
+            <div>
+                <div class="metric-label">PUT P&L</div>
+                <div class="metric-value">${put_pnl:.2f}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("")
-st.title("Options Price - Interactive Heatmap")
-st.info("Explore how option prices fluctuate with varying 'Spot Prices and Volatility' levels using interactive heatmap parameters, all while maintaining a constant 'Strike Price'.")
+st.title("Options P&L - Interactive Heatmap")
+st.info("Explore how option profit and losses fluctuate with varying 'Spot Prices and Volatility' levels using interactive heatmap parameters, all while maintaining a constant 'Strike Price' and 'Current Option Price'.")
 
 # Interactive Sliders and Heatmaps for Call and Put Options
 col1, col2 = st.columns([1,1], gap="small")
